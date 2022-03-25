@@ -40,6 +40,10 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 		return err
 	}
 
+	if string(js) == "" {
+		js = []byte("")
+	}
+
 	js = append(js, '\n')
 
 	for key, value := range headers {
