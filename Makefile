@@ -5,6 +5,9 @@ BINARY_NAME=$(shell basename "$(PWD)")
 migrate:
 	migrate -path ./migrations -database ${GREENLIGHT_DB_DSN} up
 
+run:
+	go run ./cmd/api
+
 build:
 	echo "Compiling for every OS and Platform"
 	GOARCH=amd64 GOOS=darwin go build -o ./bin/${BINARY_NAME}-darwin ./cmd/api
