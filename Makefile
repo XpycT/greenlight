@@ -1,36 +1,26 @@
-include .env
+## help: print this help message
+.PHONY: help
+help:
+	@echo 'Usage:'
+	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
 
-BINARY_NAME=$(shell basename "$(PWD)")
+.PHONY: confirm
+confirm:
+	@echo -n 'Are you sure? [y/N] ' && read ans && [ $${ans:-N} = y ]
 
-migrate:
-	migrate -path ./migrations -database ${GREENLIGHT_DB_DSN} up
-
-run:
+## run/api: run the cmd/api application
+.PHONY: run/api
+run/api:
 	go run ./cmd/api
 
-build:
-	echo "Compiling for every OS and Platform"
-	GOARCH=amd64 GOOS=darwin go build -o ./bin/${BINARY_NAME}-darwin ./cmd/api
-	GOARCH=amd64 GOOS=linux go build -o ./bin/${BINARY_NAME}-linux ./cmd/api
-	GOARCH=amd64 GOOS=windows go build -o ./bin/${BINARY_NAME}-windows ./cmd/api
+## db/migrations/new name=$1: create a new database migration
+.PHONY: db/migrations/new
+db/migrations/new:
+	@echo 'Creating migration files for ${name}...'
+	migrate create -seq -ext=.sql -dir=./migrations ${name}
 
-clean:
-	go clean
-	rm ./bin/${BINARY_NAME}-darwin
-	rm ./bin/${BINARY_NAME}-linux
-	rm ./bin/${BINARY_NAME}-windows
-
-test:
-	go test ./...
-
-test_coverage:
-	go test ./... -coverprofile=coverage.out
-
-dep:
-	go mod download
-
-vet:
-	go vet ./...
-
-lint:
-	golangcli-lint run ./... --enable-all
+## db/migrations/up: apply all up database migrations
+.PHONY: db/migrations/up
+db/migrations/up: confirm
+	@echo 'Running up migrations...'
+	migrate -path ./migrations -database ${GREENLIGHT_DB_DSN} up
